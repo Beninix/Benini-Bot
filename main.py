@@ -1,12 +1,15 @@
 import discord
 import requests
+from champion import Champion
 from bs4 import BeautifulSoup
 
 client = discord.Client()
 
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
+
 
 @client.event
 async def on_message(message):
@@ -20,17 +23,49 @@ async def on_message(message):
             username = message.content[10:]
         else:
             username = 'Invalid Username'
-        print(message.content)
-        print(len(message.content))
         URL = 'https://na.op.gg/summoner/userName=' + username
-        page = requests.get(URL)
-        soup = BeautifulSoup(page.content, 'html.parser')
-        await message.channel.send(username)
+        page = requests.get(url=URL, headers={'User-Agent': 'Mozilla/5.0'})
+        soup = BeautifulSoup(page.text, 'html.parser')
+        overall = soup \
+            .find('div',
+                  class_="MostChampionContent tabItem overview-stats--all")
+        champs = overall.find_all('div', class_="ChampionBox Ranked")
+        champion_pool = []
+        for champ in champs:
+            champion_pool.append(Champion(
+                name=champ.find('div', class_="ChampionName").attrs['title'],
+                kda=champ.find('span', class_='KDA').contents[0],
+                kda_whole=
+                champ.find('span', class_='Kill').contents[0] + "/" +
+                champ.find('span', class_='Death').contents[0] + "/" +
+                champ.find('span', class_='Assist').contents[0],
+                cs=champ.find('div', class_='ChampionMinionKill tip')
+                    .contents[0]
+                    .strip('\n\t')
+                    .split()[1],
+                cs_min=champ.find('div', class_='ChampionMinionKill tip')
+                    .contents[0]
+                    .strip('\n\t')
+                    .split()[2]
+                    .strip('()'),
+                win_rate=champ.find('div', class_='Played')
+                    .contents[1]
+                    .contents[0].
+                    strip('\n\t'),
+                games_played=champ.find('div', class_='Played')
+                    .contents[3]
+                    .contents[0]
+                    .strip('\n\t')
+            ))
+        for champion in champion_pool:
+            print(champion.get_all())
+
+        await message.channel.send(URL)
+
 
 tokenFile = open('token.txt', 'r')
 TOKEN = tokenFile.read()
 tokenFile.close()
 print(TOKEN)
-
 
 client.run(TOKEN)
