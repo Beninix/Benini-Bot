@@ -24,7 +24,7 @@ async def on_message(message):
             username = message.content[10:]
         else:
             username = 'Invalid Username'
-        URL = 'https://na.op.gg/summoner/userName=' + username
+        URL = 'https://na.op.gg/summoner/userName=' + username.replace(' ','+')
         page = requests.get(url=URL, headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(page.text, 'html.parser')
         overall = soup \
@@ -63,11 +63,7 @@ async def on_message(message):
         embed.set_thumbnail(url='https:'+soup.find('img', class_='ProfileImage').get('src'))
         embed.add_field(name='Champion', value=columns[0], inline=True)
         embed.add_field(name='KDA', value=columns[1], inline=True)
-        embed.add_field(name='K/D/A', value=columns[2], inline=True)
-        embed.add_field(name='CS', value=columns[3], inline=True)
-        embed.add_field(name='CS/min', value=columns[4], inline=True)
-        embed.add_field(name='Win Rate', value=columns[5], inline=True)
-        embed.add_field(name='Games Played', value=columns[6], inline=True)
+        embed.add_field(name='Games Played', value=columns[2], inline=True)
         await message.channel.send(embed=embed)
 
 
