@@ -1,5 +1,6 @@
 import discord
 import requests
+from format import format_table
 from champion import Champion
 from bs4 import BeautifulSoup
 
@@ -57,10 +58,17 @@ async def on_message(message):
                     .contents[0]
                     .strip('\n\t')
             ))
-        for champion in champion_pool:
-            print(champion.get_all())
-
-        await message.channel.send(URL)
+        columns = format_table(champion_pool)
+        embed = discord.Embed(title=username, url=URL)
+        embed.set_thumbnail(url='https:'+soup.find('img', class_='ProfileImage').get('src'))
+        embed.add_field(name='Champion', value=columns[0], inline=True)
+        embed.add_field(name='KDA', value=columns[1], inline=True)
+        embed.add_field(name='K/D/A', value=columns[2], inline=True)
+        embed.add_field(name='CS', value=columns[3], inline=True)
+        embed.add_field(name='CS/min', value=columns[4], inline=True)
+        embed.add_field(name='Win Rate', value=columns[5], inline=True)
+        embed.add_field(name='Games Played', value=columns[6], inline=True)
+        await message.channel.send(embed=embed)
 
 
 tokenFile = open('token.txt', 'r')

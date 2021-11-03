@@ -29,6 +29,9 @@ class Champion:
     def get_cs(self):
         return self.cs
 
+    def get_cs_min(self):
+        return self.cs_min
+
     def get_win_rate(self):
         return self.win_rate
 
