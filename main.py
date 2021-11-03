@@ -27,6 +27,12 @@ async def on_message(message):
         URL = 'https://na.op.gg/summoner/userName=' + username.replace(' ','+')
         page = requests.get(url=URL, headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(page.text, 'html.parser')
+        rank = soup.find('div', class_='TierRank').contents[0].strip()
+        lp = '\nN/A'
+        winratio = '\nN/A'
+        if rank != 'Unranked':
+            lp = soup.find('span', class_='LeaguePoints').contents[0]
+            winratio = soup.find('span', class_='winratio').contents[0].split()[2]
         overall = soup \
             .find('div',
                   class_="MostChampionContent tabItem overview-stats--all")
@@ -35,7 +41,7 @@ async def on_message(message):
         for champ in champs:
             champion_pool.append(Champion(
                 name=champ.find('div', class_="ChampionName").attrs['title'],
-                kda=champ.find('span', class_='KDA').contents[0],
+                kda=champ.find('span', class_='KDA').contents[0].split(':')[0],
                 kda_whole=
                 champ.find('span', class_='Kill').contents[0] + "/" +
                 champ.find('span', class_='Death').contents[0] + "/" +
@@ -57,10 +63,12 @@ async def on_message(message):
                     .contents[3]
                     .contents[0]
                     .strip('\n\t')
+                    .split()[0]
             ))
         columns = format_table(champion_pool)
         embed = discord.Embed(title=username, url=URL)
         embed.set_thumbnail(url='https:'+soup.find('img', class_='ProfileImage').get('src'))
+        embed.add_field(name = 'Ranked Stats', value = rank + lp + winratio, inline=False)
         embed.add_field(name='Champion', value=columns[0], inline=True)
         embed.add_field(name='KDA', value=columns[1], inline=True)
         embed.add_field(name='Games Played', value=columns[2], inline=True)
@@ -70,6 +78,5 @@ async def on_message(message):
 tokenFile = open('token.txt', 'r')
 TOKEN = tokenFile.read()
 tokenFile.close()
-print(TOKEN)
 
 client.run(TOKEN)
